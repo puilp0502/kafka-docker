@@ -4,13 +4,61 @@ services:
     image: wurstmeister/zookeeper
     ports:
       - "2181:2181"
-  kafka:
+  zoonavigator:
+    image: elkozmon/zoonavigator
+    ports:
+      - "9000:9000"
+    environment:
+      HTTP_PORT: 9000
+  akhq:
+    image: tchiotludo/akhq
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./akhq_config.yml:/app/application.yml
+  client:
+    build: client/
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./client/send.py:/app/send.py
+
+  kafka-01:
     build: .
     ports:
-      - "9092"
+      - "9091:9092"
     environment:
       DOCKER_API_VERSION: 1.22
-      KAFKA_ADVERTISED_HOST_NAME: 192.168.99.100
+      KAFKA_ADVERTISED_HOST_NAME: 192.168.0.27
+      KAFKA_ADVERTISED_PORT: 9091
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    cap_add:
+      - NET_ADMIN
+  kafka-02:
+    build: .
+    ports:
+      - "9092:9092"
+    environment:
+      DOCKER_API_VERSION: 1.22
+      KAFKA_ADVERTISED_HOST_NAME: 192.168.0.27
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    cap_add:
+      - NET_ADMIN
+  kafka-03:
+    build: .
+    ports:
+      - "9093:9092"
+    environment:
+      DOCKER_API_VERSION: 1.22
+      KAFKA_ADVERTISED_HOST_NAME: 192.168.0.27
+      KAFKA_ADVERTISED_PORT: 9093
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    cap_add:
+      - NET_ADMIN
